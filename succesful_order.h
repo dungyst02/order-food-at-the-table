@@ -1,35 +1,32 @@
-#include<ctime>
-#include<iostream>
+#pragma once
 
-class SuccesfulOrder {
+#include <ctime>
+#include <string>
+
+class SuccessfulOrder {
 private:
     long orderId;
     int tableId;
     time_t timeOrder;
     bool status;
-    string data;
+    std::string data;
+
 public:
     // Constructor
-    SuccesfulOrder(){}
-    SuccesfulOrder(long orderId, int tableId, time_t timeOrder, bool status, string data) {
-        this->orderId = orderId;
-        this->tableId = tableId;
-        this->timeOrder = timeOrder;
-        this->status = status;
-        this->data = data;
-    }
+    SuccessfulOrder();
+    SuccessfulOrder(long orderId, int tableId, time_t timeOrder, bool status, std::string data);
 
     // Getter methods
-    long getOrderId() { return orderId; }
-    int getTableId() { return tableId; }
-    time_t getTime() { return timeOrder; }
-    bool getStatus() { return status; }
-    string getData() { return data; }
+    long getOrderId();
+    int getTableId();
+    time_t getTime();
+    bool getStatus();
+    std::string getData();
 
     // Setter methods
-    void setOrderId(long orderId) { this->orderId = orderId; }
-    void setTableId(int tableId) { this->tableId = tableId; }
-    void setTime(time_t timeOrder) { this->timeOrder = timeOrder; }
-    void setStatus(bool status) { this->status = status; }
-    void setData(string data) { this->data = data; }
+    void setOrderId(long orderId);
+    void setTableId(int tableId);
+    void setTime(time_t timeOrder);
+    void setStatus(bool status);
+    void setData(std::string data);
 };
