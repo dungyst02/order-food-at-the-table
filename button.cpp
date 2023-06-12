@@ -7,6 +7,7 @@ Button::Button(int buttonId, time_t timeButton) {
     this->buttonId = buttonId;
     this->timeButton = timeButton;
 }
+Button::~Button(){}
 
 int Button::getButtonId() { return buttonId; }
 

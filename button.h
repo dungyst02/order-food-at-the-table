@@ -12,6 +12,7 @@ private:
 public:
     Button();
     Button(int buttonId, time_t timeButton);
+    ~Button();
 
     int getButtonId();
     time_t getTime();

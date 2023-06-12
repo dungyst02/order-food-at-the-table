@@ -7,9 +7,7 @@
 #include<queue>
 #include "button.h"
 #include "order.h"
-#include "succesful_order.h"
-#include "special_button.h"
-#include<delete_order.h>
+
 
 
 #define number_of_tables 20 // so ban toi da
@@ -17,70 +15,58 @@
 using namespace std;
 
 
-// Hàm kiểm tra xem một phần tử có thời gian trong hàng đợi đã quá 60 giây hay không
-bool isExpired(const Order& item) {
-    std::time_t currentTime = std::time(nullptr);
-    return (currentTime - item.timeAdded) > 60;
-}
-
 // Hàm xóa các phần tử hết hạn khỏi hàng đợi
-void autoDelete(queue<Order>& queue) {
-    if(!queue.empty() && isExpired(queue.front()))
-        queue.pop();
+void autoDelete(vector<Order*>& list) {
+    time_t currentTime = std::time(nullptr);
+    if (!list.empty()) {
+        if (currentTime - list[0]->getTime() > 60) {
+            delete list[0];
+            list.erase(list.begin());
+        }
+    }
 }
 
-void xoaPhanTuTrung(queue<Order> listOrder, Order order) {
-    queue<Order> tempQueue; // Hàng đợi tạm để lưu trữ các phần tử không bị xóa
 
-    // Duyệt qua từng phần tử trong hàng đợi
-    while (!queue.empty()) {
-        Order frontList = queue.front(); // Lấy phần tử đầu hàng đợi
+void thayThePhanTuTrung(vector<Order*>& listOrder, Order* order) {
 
-        if ( frontList!= order) {
-            // Nếu phần tử không bị xóa, đẩy nó vào hàng đợi tạm
-            tempQueue.push(frontList);
+    vector<Order*> newList;
+
+    for (Order* item : listOrder) {
+        if (item->getTableId() != order->getTableId()) {
+            newList.push_back(item);
+        } else {
+            delete item;
         }
-
-        queue.pop(); // Xóa phần tử đã xử lý khỏi hàng đợi
     }
 
-    // Sau khi xử lý hết, gán lại các phần tử trong hàng đợi tạm vào hàng đợi gốc
-    queue = tempQueue;
+    // Cập nhật listOrder với các phần tử không trùng
+    listOrder = newList;
+    listOrder.push_back(order);
+    
 }
 //Luu cac phan tu thanh cong
-void saveSuccessfulOrder(std::queue<Order>& listOrder, Button button, std::vector<SuccesfulOrder>& listSuccessfulOrder) {
-    std::queue<Order> tempQueue; // Hàng đợi tạm để lưu trữ các phần tử không bị xóa
-
-    // Duyệt qua từng phần tử trong hàng đợi
-    while (!listOrder.empty()) {
-        Order frontOrder = listOrder.front(); // Lấy phần tử đầu hàng đợi
-
-        if (frontOrder.getTableId() == button.getButtonId()) {
-            // Tạo một đối tượng SuccesfulOrder từ Order hiện tại
-            SuccesfulOrder successfulOrder(frontOrder.getOrderId(), frontOrder.getTableId(), frontOrder.getTime(), true, frontOrder.getData());
-            listSuccessfulOrder.push_back(successfulOrder);
-        } else {
-            // Nếu không trùng, đẩy phần tử vào hàng đợi tạm
-            tempQueue.push(frontOrder);
+void saveSuccessfulOrder(vector<Order*>& listOrder, Button* button, vector<Order*>& listSuccessfulOrder) {
+    for (size_t i = 0; i < listOrder.size(); i++) {
+        if (listOrder[i]->getTableId() == button->getButtonId()) {
+            listSuccessfulOrder.push_back(listOrder[i]);
         }
-
-        listOrder.pop(); // Xóa phần tử đã xử lý khỏi hàng đợi
     }
-
-    // Sau khi xử lý hết, gán lại các phần tử trong hàng đợi tạm vào hàng đợi gốc
-    listOrder = tempQueue;
+        
 }
-void deleteOrderSucessful(vector<ListOrderSuccesful>& listSuccesfulOrder, DeleteOrder deleteOrder) {
-    for(size_t i = 0; i < listSuccesfulOrder.size(); i++) {
-        if(deleteOrder.getOrderId() == listSuccesful[i].getOrderId()) {
-            listSuccesfulOrder.erase(listSuccesfulOrder.begin() + i);
+//Xoa phan tu trong list cac order thanh cong
+void deleteOrderSucessful(vector<Order*>& listSuccesfulOrder, Order* order) {
+    for (auto it = listSuccesfulOrder.begin(); it != listSuccesfulOrder.end(); ++it) {
+        if ((*it)->getOrderId() == order->getOrderId()) {
+            listSuccesfulOrder.erase(it);
+            break;
         }
     }
 }
+
 int main() {
 
-    queue<Order> listOrder; // list các giá trị order chưa thành công
-    vector<SuccesfulOrder> listSuccesfulOrder; // list các giá trị order thành công
+    vector<Order*> listOrder; // list các giá trị order chưa thành công
+    vector<Order*> listSuccesfulOrder; // list các giá trị order thành công
     while(true) {
     // Khởi tạo ngẫu nhiên các events
     std::random_device rd;
@@ -98,51 +84,36 @@ int main() {
     autoDelete(listOrder);
 
     if(random_order == 1) {
-        Order order;
-        order.randomOrder();
+        Order* order = new Order();
+        order->randomOrder();
         //order.display();
         // Xóa các phần tử trùng với order trưsớc đó đã được lưu tại list order chưa thành công 
-        xoaPhanTuTrung(listOrder, order);
-
-        listOrder.push();// lưu phần tử
-
-        // // kiem tra trung lap voi cac order thanh cong
-        // for(size_t i = 0; i < listSuccesfulOrder.size(); i++) {
-        //     if(listSuccesfulOrder[i].getTableId() == order.getTableId()) {
-        //         listOrder.pop_back(); // xoa khoi list order chua thanh cong
-        //         if(order.getStatus() == 0) {
-        //             listSuccesfulOrder.erase(listSuccesfulOrder.begin() + i); //xoa khoi mang các order thành công
-        //         }
-        //     }
-        // }
-        // //Xoa het cac order co status = 0 khoi list cac order chua thanh cong
-        // for(size_t i = 0; i < listOrder.size(); i++) {
-        //     if(listOrder[i].getStatus() == 0) {
-        //         listOrder.erase(listOrder.begin() + i);
-        //     }
-        // }
+        if(order->getStatus() == 0)
+        thayThePhanTuTrung(listOrder, order);
+        else if(order->getStatus() == -1) {
+            deleteOrderSucessful(listSuccesfulOrder, order);
+        }
+        delete order;
     }
     if(random_button == 1) {
-        Button button;
-        button.randomButton();
+        Button* button = new Button();
+        button->randomButton();
         // luu cac order thanh cong
-        saveSuccessfulOrder(listOrder, button, listSuccessfulOrder);
+        saveSuccessfulOrder(listOrder, button, listSuccesfulOrder);
     }
-    if(ramdom_delete_order == 1) {
-        deleteOrderSucessful(listSuccesfulOrder, deleteOrder);
-    }
+
     system("clear"); // Xóa màn hình console trên Linux
         std::cout << "orders:\n";
         for (size_t i = 0; i < listOrder.size(); i++) {
             std::cout << i + 1 << ". ";
-            std::cout << "TableId: " << listOrder[i].getOrderId() << ", ";
-            std::cout << "TableId: " << listOrder[i].getTableId() << ", ";
-            std::time_t orderTime = listOrder[i].getTime();
+            std::cout << "TableId: " << listOrder[i]->getOrderId() << ", ";
+            std::cout << "TableId: " << listOrder[i]->getTableId() << ", ";
+            std::time_t orderTime = listOrder[i]->getTime();
             char buffer[80];
             std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", std::localtime(&orderTime));
             std::cout << "Time: " << buffer << ", ";
-            std::cout << "Status: " << listOrder[i].getStatus();
-            std::cout << "Data: " << listOrder[i].getData();
+            std::cout << "Status: " << listOrder[i]->getStatus();
+            std::cout << "Data: " << listOrder[i]->getData();
             std::cout << std::endl;
         }
     /// In danh sách các order thành công
@@ -150,17 +121,32 @@ int main() {
         std::cout << "Successful orders:\n";
         for (size_t i = 0; i < listSuccesfulOrder.size(); i++) {
             std::cout << i + 1 << ". ";
-            std::cout << "TableId: " << listSuccesfulOrder[i].getOrderId() << ", ";
-            std::cout << "TableId: " << listSuccesfulOrder[i].getTableId() << ", ";
-            std::time_t orderTime = listSuccesfulOrder[i].getTime();
+            std::cout << "TableId: " << listSuccesfulOrder[i]->getOrderId() << ", ";
+            std::cout << "TableId: " << listSuccesfulOrder[i]->getTableId() << ", ";
+            std::time_t orderTime = listSuccesfulOrder[i]->getTime();
             char buffer[80];
             std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", std::localtime(&orderTime));
             std::cout << "Time: " << buffer << ", ";
-            std::cout << "Status: " << listSuccesfulOrder[i].getStatus() <<  ", ";
-            std::cout << "Data: " << listSuccesfulOrder[i].getData();
+            std::cout << "Status: " << listSuccesfulOrder[i]->getStatus() <<  ", ";
+            std::cout << "Data: " << listSuccesfulOrder[i]->getData();
             std::cout << std::endl;
         }
     std::this_thread::sleep_for(std::chrono::milliseconds(300)); // Tạm dừng 1s
     } 
+    // Delete elements in listOrder
+    for (size_t i = 0; i < listOrder.size(); i++) {
+        delete listOrder[i];
+    }
+
+    // Clear the vector
+    listOrder.clear();
+
+    // Delete elements in listSuccesfulOrder
+    for (size_t i = 0; i < listSuccesfulOrder.size(); i++) {
+        delete listSuccesfulOrder[i];
+    }
+
+    // Clear the vector
+    listSuccesfulOrder.clear();
     return 0;
 }
